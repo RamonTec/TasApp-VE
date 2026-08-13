@@ -70,9 +70,15 @@
 	setContext(KEY_ACCIONES, accionesAcceso);
 	setContext(KEY_CARGAR, () => tasas.acciones.cargar());
 
-	onMount(() => {
+	onMount(async () => {
 		if (browser) {
 			void tasas.acciones.cargar();
+			try {
+				const { registerSW } = await import('virtual:pwa-register');
+				registerSW({ immediate: true });
+			} catch (err) {
+				console.error('Failed to register PWA', err);
+			}
 		}
 	});
 </script>
