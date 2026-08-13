@@ -13,7 +13,7 @@
 		KEY_CARGAR,
 		type AccionesAcceso
 	} from '$lib/presentation/contexto';
-	import { setContext } from 'svelte';
+	import { setContext, untrack } from 'svelte';
 	import Nav from '$lib/presentation/components/Nav.svelte';
 	import type { EstadoTasas, AccionesTasas } from '$lib/presentation/stores/tasas';
 	import type { AccionesItems } from '$lib/presentation/stores/items';
@@ -55,7 +55,7 @@
 		? tasaRepo.obtenerPersonalizada()
 		: null;
 
-	const inicial: EstadoTasas = leerEstadoInicial(data, personalizada);
+	const inicial: EstadoTasas = leerEstadoInicial(untrack(() => data), personalizada);
 
 	tasas.store.set(inicial);
 

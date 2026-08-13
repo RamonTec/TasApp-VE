@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import Hand from '@lucide/svelte/icons/hand';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
@@ -12,13 +13,10 @@
 
 	let { valor, etiqueta, onGuardar, onLimpiar }: Props = $props();
 
-	let valorInicial: string | number | null = $state(valor);
-	$effect(() => {
-		valorInicial = valor;
-	});
 
-	let valorTexto = $state(valor !== null ? String(valor).replace('.', ',') : '');
-	let etiquetaTexto = $state(etiqueta);
+
+	let valorTexto = $state(untrack(() => valor !== null ? String(valor).replace('.', ',') : ''));
+	let etiquetaTexto = $state(untrack(() => etiqueta));
 	let error = $state<string | null>(null);
 
 	function guardar(e: Event): void {
@@ -34,7 +32,7 @@
 		etiquetaTexto = '';
 	}
 
-	void valorInicial;
+
 </script>
 
 <section
