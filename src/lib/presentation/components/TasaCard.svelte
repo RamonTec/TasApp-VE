@@ -26,7 +26,7 @@
 			color: 'var(--color-tasa-usdt)',
 			bg: 'var(--color-accent-warning-soft)',
 			icono: Coins,
-			etiqueta: 'USDT paralelo'
+			etiqueta: 'USDT Binance'
 		},
 		PERSONALIZADA: {
 			color: 'var(--color-tasa-personal)',
@@ -62,7 +62,7 @@
 
 	let esFallback = $derived(
 		(props.tipo === 'BCV' && props.tasa.fuenteUsada === 'bcv.org.ve') ||
-			(props.tipo === 'USDT' && props.tasa.fuenteUsada === 'Binance P2P')
+			(props.tipo === 'USDT' && (props.tasa.fuenteUsada ?? '').startsWith('ve.dolarapi'))
 	);
 </script>
 
@@ -132,7 +132,7 @@
 			<div class="grid grid-cols-2 gap-3 text-xs">
 				<div>
 					<p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-fg-subtle)]">
-						Compra
+						Compras a
 					</p>
 					<p class="tabular text-sm font-semibold text-[var(--color-fg-default)]">
 						{formatearTasa(props.tasa.compra)}
@@ -140,7 +140,7 @@
 				</div>
 				<div>
 					<p class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-fg-subtle)]">
-						Venta
+						Vendes a
 					</p>
 					<p class="tabular text-sm font-semibold text-[var(--color-fg-default)]">
 						{formatearTasa(props.tasa.venta)}

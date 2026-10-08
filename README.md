@@ -1,16 +1,21 @@
 # TasApp VE
 
-App SvelteKit para consultar la tasa oficial del BCV y el USDT (paralelo) en Venezuela, hacer conversiones entre monedas (USD, EUR, USDT, VES) y sumar items con totales calculados en la tasa que elijas.
+App SvelteKit, sin publicidad, para consultar la tasa oficial del BCV y el USDT de Binance P2P en Venezuela.
+
+- **¿A qué tasa te están cobrando?** Precio en $ + monto en Bs → tasa implícita, comparación contra BCV/USDT y si conviene pagar en Bs o en divisas.
+- **Lista de compras con presupuesto:** suma productos en cualquier moneda y te dice si te alcanza (o cuánto falta) con cada tasa.
+- **Conversor** entre USD, EUR, USDT y VES.
+- Acepta montos al estilo venezolano (`1.234,56`).
 
 ## Stack
 
 - **SvelteKit 2** (Svelte 5 runes) + TypeScript estricto
 - **TailwindCSS 4** con paleta propia "Caribbean Premium" (teal + amber + rose)
 - **cheerio** para scraping tolerante del BCV
-- **Binance P2P** (endpoint público) como fuente secundaria
-- **ve.dolarapi.com** como fuente primaria agregada
+- **Binance P2P** (endpoint público) como fuente principal del USDT
+- **ve.dolarapi.com** como fuente primaria del BCV y respaldo del USDT
 - **localStorage** para tasa personalizada + lista de items
-- **Vitest** para tests unitarios (72 tests)
+- **Vitest** para tests unitarios
 
 ## Arquitectura Multi-Fuente (Resiliencia)
 
@@ -18,9 +23,9 @@ Las tasas se obtienen con **cascada de fallback** para tolerar caídas de cualqu
 
 | Prioridad | Fuente | Tipo | Notas |
 |---|---|---|---|
-| 1° | `ve.dolarapi.com` | API comunitaria | BCV oficial + paralelo Binance en una sola petición |
+| 1° | `ve.dolarapi.com` | API comunitaria | BCV oficial (USD + EUR). Respaldo del USDT (paralelo promedio) |
 | 2° | `bcv.org.ve` (scraping) | HTML + cheerio | Dos URLs candidatas (página dedicada `/estadisticas/...` + home) |
-| 3° | `Binance P2P` (scraping) | JSON POST | Top 10 anuncios ordenados por volumen |
+| USDT | `Binance P2P` | JSON POST `adv/search` | **Fuente principal del USDT.** Mediana de los 10 mejores anuncios de cada lado (compra/venta) |
 | 4° | Tasa manual del usuario | UI | Persistida en localStorage |
 
 **Cada `TasaCard` muestra el origen real** del dato (badge "Fuente: ...") y un indicador "·fallback" si vino de una fuente secundaria.

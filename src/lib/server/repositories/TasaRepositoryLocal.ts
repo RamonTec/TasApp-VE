@@ -10,7 +10,7 @@ const KEY_CACHE_BCV = 'cache:bcv';
 const KEY_CACHE_USDT = 'cache:usdt';
 const KEY_PERSONALIZADA = 'tasa:personalizada';
 const TTL_MS_BCV = 60 * 60 * 1000;
-const TTL_MS_USDT = 60 * 60 * 1000;
+const TTL_MS_USDT = 5 * 60 * 1000;
 
 interface CacheTasa<T> {
 	readonly valor: T;

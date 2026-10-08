@@ -77,3 +77,32 @@ export function tiempoRelativo(iso: string): string {
 	if (diffHoras < 24) return `hace ${diffHoras} h`;
 	return d.format('DD MMM');
 }
+
+/**
+ * Interpreta montos escritos al estilo venezolano o internacional:
+ * "1.234,56" → 1234.56 · "1234,56" → 1234.56 · "1234.56" → 1234.56 · "1.234" → 1234.
+ * Devuelve NaN si el texto no es un número.
+ */
+export function parsearMonto(texto: string): number {
+	let s = texto.trim().replace(/\s|bs\.?|\$|€|usdt?/gi, '');
+	if (s === '') return Number.NaN;
+	const ultimaComa = s.lastIndexOf(',');
+	const ultimoPunto = s.lastIndexOf('.');
+	if (ultimaComa >= 0 && ultimoPunto >= 0) {
+		// El último separador que aparece es el decimal.
+		const decimal = ultimaComa > ultimoPunto ? ',' : '.';
+		const miles = decimal === ',' ? '.' : ',';
+		s = s.split(miles).join('').replace(decimal, '.');
+	} else if (ultimaComa >= 0) {
+		const partes = s.split(',');
+		s = partes.length > 2 ? partes.join('') : s.replace(',', '.');
+	} else if (ultimoPunto >= 0) {
+		const partes = s.split('.');
+		// Varios puntos, o un punto seguido de exactamente 3 dígitos: separador de miles.
+		if (partes.length > 2 || (partes[1].length === 3 && partes[0].length > 0)) {
+			s = partes.join('');
+		}
+	}
+	if (!/^-?\d*\.?\d+$/.test(s)) return Number.NaN;
+	return Number.parseFloat(s);
+}

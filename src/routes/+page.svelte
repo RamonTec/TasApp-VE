@@ -3,6 +3,8 @@
 	import Encabezado from '$lib/presentation/components/Encabezado.svelte';
 	import TasaCard from '$lib/presentation/components/TasaCard.svelte';
 	import DiferenciaCard from '$lib/presentation/components/DiferenciaCard.svelte';
+	import ResumenTasas from '$lib/presentation/components/ResumenTasas.svelte';
+	import TasaRealCard from '$lib/presentation/components/TasaRealCard.svelte';
 	import ManualTasaForm from '$lib/presentation/components/ManualTasaForm.svelte';
 	import { calcularDiferenciaEntreFuentes } from '$lib/domain/usecases/conversion';
 	import { tiempoRelativo } from '$lib/shared/format';
@@ -16,6 +18,12 @@
 	let diferencia = $derived(
 		calcularDiferenciaEntreFuentes($tasas.bcv?.usd ?? null, $tasas.usdt?.promedio ?? null)
 	);
+
+	let tasasDisponibles = $derived({
+		bcv: $tasas.bcv,
+		usdt: $tasas.usdt,
+		personalizada: $tasas.personalizada
+	});
 
 	let falloTotal = $derived(!$tasas.bcv && !$tasas.usdt && !$tasas.cargando);
 
@@ -38,9 +46,13 @@
 
 <Encabezado
 	titulo="Tasas del día"
-	descripcion="Tasa oficial del BCV, paralelo USDT (Binance P2P) y comparación."
+	acciones={accionesNav}
 >
-	{@render accionesNav()}
+	{#if $tasas.ultimaActualizacion}
+		<p class="-mt-2 text-xs text-[var(--color-fg-subtle)]">
+			Actualizado {tiempoRelativo($tasas.ultimaActualizacion)}
+		</p>
+	{/if}
 </Encabezado>
 
 {#if $tasas.errorBcv && !$tasas.bcv}
@@ -75,6 +87,20 @@
 	</div>
 {/if}
 
+<ResumenTasas
+	bcv={$tasas.bcv}
+	usdt={$tasas.usdt}
+	{diferencia}
+	cargando={$tasas.cargando}
+/>
+
+<div class="mt-4">
+	<TasaRealCard tasas={tasasDisponibles} />
+</div>
+
+<h2 class="mt-10 mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--color-fg-muted)]">
+	Detalle de tasas
+</h2>
 <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 	{#if $tasas.bcv}
 		<TasaCard tipo="BCV" tasa={$tasas.bcv} />
@@ -103,8 +129,3 @@
 	</div>
 {/if}
 
-{#if $tasas.ultimaActualizacion}
-	<p class="mt-6 text-center text-xs text-[var(--color-fg-subtle)]">
-		Última consulta {tiempoRelativo($tasas.ultimaActualizacion)}
-	</p>
-{/if}

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	calcularConversion,
 	calcularDiferenciaEntreFuentes,
+	calcularPresupuesto,
 	calcularDiferenciaPorcentual,
 	calcularTotalesItems,
 	convertirItemAVes,
@@ -222,5 +223,46 @@ describe('calcularTotalesItems', () => {
 		];
 		const t = calcularTotalesItems({ items, tasas, tasaActiva: 'BCV' });
 		expect(t.cantidadItems).toBe(10);
+	});
+});
+
+describe('calcularPresupuesto', () => {
+	const tasas = { bcvUsd: 875, bcvEur: 980, usdtPromedio: 1015, personalizada: null };
+	const item = (precio: number, moneda: 'USD' | 'VES' | 'EUR', cantidad = 1) => ({
+		id: `${precio}-${moneda}`,
+		nombre: 'x',
+		precio,
+		cantidad,
+		moneda
+	});
+
+	it('items en Bs y presupuesto en $: con USDT rinde más que con BCV', () => {
+		const r = calcularPresupuesto([item(9500, 'VES')], { monto: 10, moneda: 'USD' }, tasas);
+		const bcv = r.find((x) => x.ref === 'BCV')!;
+		const usdt = r.find((x) => x.ref === 'USDT')!;
+		expect(bcv.totalEnMoneda).toBeCloseTo(10.857, 3);
+		expect(bcv.alcanza).toBe(false);
+		expect(usdt.totalEnMoneda).toBeCloseTo(9.36, 2);
+		expect(usdt.alcanza).toBe(true);
+		expect(usdt.restante).toBeCloseTo(0.64, 2);
+	});
+
+	it('misma moneda: la tasa no cambia el resultado', () => {
+		const r = calcularPresupuesto([item(4, 'USD', 2)], { monto: 10, moneda: 'USD' }, tasas);
+		expect(r.map((x) => x.restante)).toEqual([2, 2]);
+	});
+
+	it('omite tasas no disponibles', () => {
+		const r = calcularPresupuesto([item(1, 'USD')], { monto: 1000, moneda: 'VES' }, tasas);
+		expect(r.map((x) => x.ref)).toEqual(['BCV', 'USDT']);
+	});
+
+	it('lista vacía: sobra todo el presupuesto', () => {
+		const r = calcularPresupuesto([], { monto: 50, moneda: 'USD' }, tasas);
+		expect(r.every((x) => x.restante === 50 && x.alcanza)).toBe(true);
+	});
+
+	it('presupuesto inválido devuelve vacío', () => {
+		expect(calcularPresupuesto([item(1, 'USD')], { monto: Number.NaN, moneda: 'USD' }, tasas)).toEqual([]);
 	});
 });

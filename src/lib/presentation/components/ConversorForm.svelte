@@ -11,7 +11,8 @@
 		formatearUsd,
 		formatearEur,
 		formatearUsdt,
-		formatearTasa
+		formatearTasa,
+		parsearMonto
 	} from '$lib/shared/format';
 	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
 	import SelectorTasaPills from './SelectorTasaPills.svelte';
@@ -37,7 +38,7 @@
 	});
 
 	let montoNumerico = $derived.by(() => {
-		const n = parseFloat(monto.replace(',', '.'));
+		const n = parsearMonto(monto);
 		return Number.isFinite(n) ? n : 0;
 	});
 

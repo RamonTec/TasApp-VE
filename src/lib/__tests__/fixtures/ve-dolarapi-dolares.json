@@ -5,8 +5,8 @@
     "nombre": "Dólar",
     "compra": null,
     "venta": null,
-    "promedio": 757.5406,
-    "fechaActualizacion": "2026-08-10T00:00:00-04:00"
+    "promedio": 874.7321,
+    "fechaActualizacion": "2026-10-08T00:00:00-04:00"
   },
   {
     "moneda": "USD",
@@ -14,7 +14,7 @@
     "nombre": "Paralelo",
     "compra": null,
     "venta": null,
-    "promedio": 857.450531,
-    "fechaActualizacion": "2026-08-10T21:01:04.095Z"
+    "promedio": 1011.986643,
+    "fechaActualizacion": "2026-10-08T14:01:35.667Z"
   }
 ]

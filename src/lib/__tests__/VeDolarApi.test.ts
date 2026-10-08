@@ -35,8 +35,10 @@ describe('VeDolarApi', () => {
 	}
 
 	it('obtiene BCV oficial por campo fuente=oficial', async () => {
+		const urls: string[] = [];
 		mockFetch((url) => {
-			expect(url).toBe('https://ve.dolarapi.com/v1/dolares');
+			urls.push(url);
+			if (url.includes('/euros')) return Promise.resolve(makeResponse([]));
 			return Promise.resolve(
 				makeResponse([
 					{ fuente: 'oficial', nombre: 'Dólar', promedio: 36.5, compra: 36.4, venta: 36.6 }
@@ -45,15 +47,17 @@ describe('VeDolarApi', () => {
 		});
 
 		const r = await obtenerTasasVeDolarApi();
+		expect(urls).toContain('https://ve.dolarapi.com/v1/dolares');
 		expect(r.bcv).not.toBeNull();
 		expect(r.bcv!.usd).toBe(36.5);
+		expect(r.bcv!.eur).toBe(0);
 		expect(r.bcv!.fuenteUsada).toBe('ve.dolarapi.com');
 	});
 
 	it('obtiene USDT (paralelo) por campo fuente=paralelo', async () => {
 		mockFetch((url) => {
 			if (url.includes('/euros')) {
-				return Promise.resolve(makeResponse({ promedio: 0 }));
+				return Promise.resolve(makeResponse([]));
 			}
 			return Promise.resolve(
 				makeResponse([
@@ -87,7 +91,9 @@ describe('VeDolarApi', () => {
 	it('maneja compra:null/venta:null reales de la API', async () => {
 		mockFetch((url) => {
 			if (url.includes('/euros')) {
-				return Promise.resolve(makeResponse({ promedio: 39.2 }));
+				return Promise.resolve(
+					makeResponse([{ moneda: 'EUR', fuente: 'oficial', compra: null, venta: null, promedio: 860.1 }])
+				);
 			}
 			return Promise.resolve(
 				makeResponse([
@@ -99,17 +105,26 @@ describe('VeDolarApi', () => {
 
 		const r = await obtenerTasasVeDolarApi();
 		expect(r.bcv!.usd).toBe(757.5406);
+		expect(r.bcv!.eur).toBe(860.1);
 		expect(r.usdt!.promedio).toBe(857.45);
 		expect(r.usdt!.compra).toBe(857.45);
 		expect(r.usdt!.venta).toBe(857.45);
 	});
 
 	it('parsea respuesta real actual de ve.dolarapi.com', async () => {
-		const raw = readFileSync(resolve(AQUI, './fixtures', 've-dolarapi-dolares.json'), 'utf8');
-		mockFetch(() => Promise.resolve(makeResponse(JSON.parse(raw))));
+		const leer = (f: string) => JSON.parse(readFileSync(resolve(AQUI, './fixtures', f), 'utf8'));
+		mockFetch((url) =>
+			Promise.resolve(
+				makeResponse(
+					leer(url.includes('/euros') ? 've-dolarapi-euros.json' : 've-dolarapi-dolares.json')
+				)
+			)
+		);
 
 		const r = await obtenerTasasVeDolarApi();
 		expect(r.bcv).not.toBeNull();
+		expect(r.bcv!.eur).toBeGreaterThan(r.bcv!.usd);
+		expect(r.usdt!.fuenteUsada).toBe('ve.dolarapi.com (paralelo)');
 		expect(r.usdt).not.toBeNull();
 		expect(r.bcv!.usd).toBeGreaterThan(100);
 		expect(r.usdt!.promedio).toBeGreaterThan(r.bcv!.usd);
@@ -121,14 +136,33 @@ describe('VeDolarApi', () => {
 		await expect(obtenerTasasVeDolarApi()).rejects.toThrow();
 	});
 
-	it('obtenerEurVeDolarApi retorna número o null', async () => {
+	it('obtenerEurVeDolarApi toma el euro oficial de la lista', async () => {
 		mockFetch((url) => {
 			expect(url).toBe('https://ve.dolarapi.com/v1/euros');
-			return Promise.resolve(makeResponse({ promedio: 39.2 }));
+			return Promise.resolve(
+				makeResponse([
+					{ moneda: 'EUR', fuente: 'oficial', promedio: 39.2 },
+					{ moneda: 'EUR', fuente: 'paralelo', promedio: 45 }
+				])
+			);
 		});
 
 		const eur = await obtenerEurVeDolarApi();
 		expect(eur).toBe(39.2);
+	});
+
+	it('el BCV sigue disponible si /euros falla', async () => {
+		mockFetch((url) =>
+			Promise.resolve(
+				url.includes('/euros')
+					? makeResponse({}, 500)
+					: makeResponse([{ fuente: 'oficial', promedio: 36.5 }])
+			)
+		);
+
+		const r = await obtenerTasasVeDolarApi();
+		expect(r.bcv!.usd).toBe(36.5);
+		expect(r.bcv!.eur).toBe(0);
 	});
 
 	it('obtenerEurVeDolarApi retorna null si falla', async () => {

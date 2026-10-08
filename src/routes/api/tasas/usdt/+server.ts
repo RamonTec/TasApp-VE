@@ -10,7 +10,7 @@ export const GET: RequestHandler = async () => {
 			{ ok: true, data: tasa },
 			{
 				headers: {
-					'Cache-Control': 'public, max-age=3600, stale-while-revalidate=7200'
+					'Cache-Control': 'public, max-age=300, stale-while-revalidate=600'
 				}
 			}
 		);

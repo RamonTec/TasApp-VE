@@ -70,6 +70,35 @@ describe('MultiFuenteTasaRepository', () => {
 		expect(r.fuenteUsada).toBe('bcv.org.ve');
 	});
 
+	it('usa Binance P2P como primera fuente para USDT', async () => {
+		const repo = new MultiFuenteTasaRepository(
+			() => null,
+			{ timeoutMsPorFuente: 1000 },
+			async () => {
+				throw new Error('VeDolarApi no debió invocarse');
+			},
+			async () => bcv,
+			async () => usdt
+		);
+		const r = await repo.obtenerUsdt();
+		expect(r.fuenteUsada).toBe('Binance P2P');
+	});
+
+	it('cae a VeDolarApi (paralelo) si Binance falla', async () => {
+		const repo = new MultiFuenteTasaRepository(
+			() => null,
+			{ timeoutMsPorFuente: 1000 },
+			async () => ({ bcv, usdt: { ...usdt, promedio: 40, fuenteUsada: 've.dolarapi.com (paralelo)' } }),
+			async () => bcv,
+			async () => {
+				throw new Error('Binance caído');
+			}
+		);
+		const r = await repo.obtenerUsdt();
+		expect(r.promedio).toBe(40);
+		expect(r.fuenteUsada).toBe('ve.dolarapi.com (paralelo)');
+	});
+
 	it('marca Binance como fuenteUsada cuando aplica', async () => {
 		const repo = new MultiFuenteTasaRepository(
 			() => null,

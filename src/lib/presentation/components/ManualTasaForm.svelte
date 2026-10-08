@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { parsearMonto } from '$lib/shared/format';
 	import { untrack } from 'svelte';
 	import Hand from '@lucide/svelte/icons/hand';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -22,7 +23,7 @@
 	function guardar(e: Event): void {
 		e.preventDefault();
 		error = null;
-		const numero = parseFloat(valorTexto.replace(',', '.'));
+		const numero = parsearMonto(valorTexto);
 		if (!Number.isFinite(numero) || numero <= 0) {
 			error = 'Ingresa un valor numérico positivo';
 			return;

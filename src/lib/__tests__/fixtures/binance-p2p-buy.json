@@ -1,0 +1,167 @@
+{
+ "code": "000000",
+ "success": true,
+ "total": 924,
+ "data": [
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1013.000",
+    "tradableQuantity": "1.39",
+    "minSingleTransAmount": "1000",
+    "maxSingleTransAmount": "134330"
+   },
+   "advertiser": {
+    "nickName": "anon0",
+    "monthOrderCount": 178,
+    "monthFinishRate": 0.899
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "5917.93",
+    "minSingleTransAmount": "4000000",
+    "maxSingleTransAmount": "36450000"
+   },
+   "advertiser": {
+    "nickName": "anon1",
+    "monthOrderCount": 2281,
+    "monthFinishRate": 0.986
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "0.29",
+    "minSingleTransAmount": "300",
+    "maxSingleTransAmount": "124083"
+   },
+   "advertiser": {
+    "nickName": "anon2",
+    "monthOrderCount": 172,
+    "monthFinishRate": 0.978
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "116.86",
+    "minSingleTransAmount": "500",
+    "maxSingleTransAmount": "10000"
+   },
+   "advertiser": {
+    "nickName": "anon3",
+    "monthOrderCount": 28,
+    "monthFinishRate": 1.0
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "751.94",
+    "minSingleTransAmount": "20000",
+    "maxSingleTransAmount": "1000000"
+   },
+   "advertiser": {
+    "nickName": "anon4",
+    "monthOrderCount": 185,
+    "monthFinishRate": 0.985
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "199.50",
+    "minSingleTransAmount": "200000",
+    "maxSingleTransAmount": "202000"
+   },
+   "advertiser": {
+    "nickName": "anon5",
+    "monthOrderCount": 140,
+    "monthFinishRate": 0.986
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.000",
+    "tradableQuantity": "299.40",
+    "minSingleTransAmount": "300000",
+    "maxSingleTransAmount": "400000"
+   },
+   "advertiser": {
+    "nickName": "anon6",
+    "monthOrderCount": 256,
+    "monthFinishRate": 0.985
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.100",
+    "tradableQuantity": "99.75",
+    "minSingleTransAmount": "10000",
+    "maxSingleTransAmount": "200000"
+   },
+   "advertiser": {
+    "nickName": "anon7",
+    "monthOrderCount": 314,
+    "monthFinishRate": 1.0
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.300",
+    "tradableQuantity": "1.89",
+    "minSingleTransAmount": "320",
+    "maxSingleTransAmount": "142128"
+   },
+   "advertiser": {
+    "nickName": "anon8",
+    "monthOrderCount": 380,
+    "monthFinishRate": 0.963
+   }
+  },
+  {
+   "adv": {
+    "tradeType": "SELL",
+    "asset": "USDT",
+    "fiatUnit": "VES",
+    "price": "1014.500",
+    "tradableQuantity": "3.60",
+    "minSingleTransAmount": "3000",
+    "maxSingleTransAmount": "4000000"
+   },
+   "advertiser": {
+    "nickName": "anon9",
+    "monthOrderCount": 98,
+    "monthFinishRate": 0.98
+   }
+  }
+ ]
+}

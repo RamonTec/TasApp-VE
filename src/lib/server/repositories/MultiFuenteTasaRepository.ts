@@ -102,18 +102,7 @@ export class MultiFuenteTasaRepository implements TasaRepository {
 		const intentos: IntentoFuente[] = [];
 		const cfg = this.cfg;
 
-		if (cfg.habilitarVeDolarApi !== false) {
-			const r = await this.intentar(() =>
-				conTimeout(this.fetchVeDolarApi(), this.timeout, 'VeDolarApi').then((x) => x.usdt),
-				've.dolarapi.com',
-				intentos,
-				ErrorFuenteVeDolarApi,
-				(v) => v !== null,
-				'sin dato USDT'
-			);
-			if (r) return r;
-		}
-
+		// Binance P2P es la referencia real del USDT; dolarapi (paralelo promedio) es respaldo.
 		if (cfg.habilitarBinance !== false) {
 			const r = await this.intentar(
 				() => conTimeout(this.fetchBinance(), this.timeout, 'BinanceP2P'),
@@ -124,6 +113,18 @@ export class MultiFuenteTasaRepository implements TasaRepository {
 				'sin dato USDT'
 			);
 			if (r) return { ...r, fuenteUsada: 'Binance P2P' };
+		}
+
+		if (cfg.habilitarVeDolarApi !== false) {
+			const r = await this.intentar(() =>
+				conTimeout(this.fetchVeDolarApi(), this.timeout, 'VeDolarApi').then((x) => x.usdt),
+				've.dolarapi.com',
+				intentos,
+				ErrorFuenteVeDolarApi,
+				(v) => v !== null,
+				'sin dato USDT'
+			);
+			if (r) return r;
 		}
 
 		const personalizada = this.personalizado();

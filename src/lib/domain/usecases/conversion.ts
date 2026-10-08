@@ -175,3 +175,48 @@ export function convertirItemA(
 	const t = tasaDeCambio(item.moneda, hacia, tasas, ref);
 	return t !== null ? sub * t : 0;
 }
+export interface Presupuesto {
+	readonly monto: number;
+	readonly moneda: Moneda;
+}
+
+export interface ResultadoPresupuesto {
+	readonly ref: TasaReferencia;
+	/** Total de la compra expresado en la moneda del presupuesto. */
+	readonly totalEnMoneda: number;
+	/** Lo que sobra (positivo) o falta (negativo), en la moneda del presupuesto. */
+	readonly restante: number;
+	readonly alcanza: boolean;
+}
+
+/**
+ * Compara lo que tienes contra el total de la lista para cada tasa disponible.
+ * Si los items y el presupuesto están en monedas distintas, la tasa cambia el resultado.
+ */
+export function calcularPresupuesto(
+	items: readonly Item[],
+	presupuesto: Presupuesto,
+	tasas: TasasAplicables,
+	refs: readonly TasaReferencia[] = ['BCV', 'USDT', 'PERSONALIZADA']
+): ResultadoPresupuesto[] {
+	if (!Number.isFinite(presupuesto.monto) || presupuesto.monto < 0) return [];
+
+	const resultados: ResultadoPresupuesto[] = [];
+	for (const ref of refs) {
+		if (tasaReferenciaVes(tasas, ref) === null) continue;
+		let total = 0;
+		let completo = true;
+		for (const item of items) {
+			const t = tasaDeCambio(item.moneda, presupuesto.moneda, tasas, ref);
+			if (t === null) {
+				completo = false;
+				break;
+			}
+			total += subtotalItem(item) * t;
+		}
+		if (!completo) continue;
+		const restante = presupuesto.monto - total;
+		resultados.push({ ref, totalEnMoneda: total, restante, alcanza: restante >= -1e-9 });
+	}
+	return resultados;
+}

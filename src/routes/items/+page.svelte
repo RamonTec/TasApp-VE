@@ -2,6 +2,7 @@
 	import { getEstadoTasas, getAcciones } from '$lib/presentation/contexto';
 	import Encabezado from '$lib/presentation/components/Encabezado.svelte';
 	import ItemList from '$lib/presentation/components/ItemList.svelte';
+	import PresupuestoCard from '$lib/presentation/components/PresupuestoCard.svelte';
 	import type { TasaReferencia } from '$lib/domain/usecases/conversion';
 
 	const tasas = getEstadoTasas();
@@ -19,9 +20,13 @@
 </script>
 
 <Encabezado
-	titulo="Items y totales"
+	titulo="Lista de compras"
 	descripcion="Suma items con precios en distintas monedas y obtén el total en la tasa que elijas."
 />
+
+<div class="mb-6">
+	<PresupuestoCard items={$itemsStore} tasas={tasasDisponibles} />
+</div>
 
 <ItemList
 	items={$itemsStore}

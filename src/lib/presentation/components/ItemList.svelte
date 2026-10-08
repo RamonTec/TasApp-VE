@@ -12,7 +12,8 @@
 		formatearEur,
 		formatearUsdt,
 		formatearVes,
-		formatearNumero
+		formatearNumero,
+		parsearMonto
 	} from '$lib/shared/format';
 	import ItemRow from './ItemRow.svelte';
 	import SelectorTasaPills from './SelectorTasaPills.svelte';
@@ -76,7 +77,7 @@
 		try {
 			const nuevo = crearItem({
 				nombre: nuevoNombre,
-				precio: parseFloat(nuevoPrecio.replace(',', '.')),
+				precio: parsearMonto(nuevoPrecio),
 				cantidad: parseInt(nuevaCantidad, 10),
 				moneda: nuevaMoneda
 			});

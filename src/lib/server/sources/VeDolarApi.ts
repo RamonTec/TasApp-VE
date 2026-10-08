@@ -23,12 +23,6 @@ interface DolarEntradaRaw {
 	fechaActualizacion?: string;
 }
 
-interface EuroEntradaRaw {
-	compra?: number | null;
-	venta?: number | null;
-	promedio?: number | null;
-	fechaActualizacion?: string;
-}
 
 function esNumeroFinitoPositivo(n: unknown): n is number {
 	return typeof n === 'number' && Number.isFinite(n) && n > 0;
@@ -38,7 +32,7 @@ function numeroPositivoO(n: unknown, fallback: number | null | undefined): numbe
 	return esNumeroFinitoPositivo(n) ? n : fallback ?? null;
 }
 
-function interpretarBcv(entrada: DolarEntradaRaw | undefined): TasaBcv | null {
+function interpretarBcv(entrada: DolarEntradaRaw | undefined, eur: number | null): TasaBcv | null {
 	if (!entrada) return null;
 	const usd = numeroPositivoO(entrada.promedio, numeroPositivoO(entrada.venta, entrada.compra));
 	if (usd === null) return null;
@@ -46,7 +40,7 @@ function interpretarBcv(entrada: DolarEntradaRaw | undefined): TasaBcv | null {
 		fuente: 'BCV',
 		valor: usd,
 		usd,
-		eur: 0,
+		eur: eur ?? 0,
 		fuenteUsada: ETIQUETA_FUENTE,
 		fecha: entrada.fechaActualizacion ?? new Date().toISOString()
 	};
@@ -65,7 +59,7 @@ function interpretarUsdt(entrada: DolarEntradaRaw | undefined): TasaUsdt | null 
 		venta,
 		promedio: prom,
 		muestras: 1,
-		fuenteUsada: ETIQUETA_FUENTE,
+		fuenteUsada: `${ETIQUETA_FUENTE} (paralelo)`,
 		fecha: entrada.fechaActualizacion ?? new Date().toISOString()
 	};
 }
@@ -80,6 +74,7 @@ function buscarPorFuente(
 
 export async function obtenerTasasVeDolarApi(): Promise<{ bcv: TasaBcv | null; usdt: TasaUsdt | null }> {
 	let respuesta: DolarEntradaRaw[];
+	const eurPromesa = obtenerEurVeDolarApi();
 	try {
 		respuesta = await httpGet<DolarEntradaRaw[]>(URL_VE_DOLAR_API, {
 			timeoutMs: 8000,
@@ -96,18 +91,21 @@ export async function obtenerTasasVeDolarApi(): Promise<{ bcv: TasaBcv | null; u
 	const usdtRaw = buscarPorFuente(respuesta, 'paralelo');
 
 	return {
-		bcv: interpretarBcv(bcvRaw),
+		bcv: interpretarBcv(bcvRaw, await eurPromesa),
 		usdt: interpretarUsdt(usdtRaw)
 	};
 }
 
+/** Euro oficial BCV. `/v1/euros` devuelve una lista igual que `/v1/dolares`. */
 export async function obtenerEurVeDolarApi(): Promise<number | null> {
 	try {
-		const eur = await httpGet<EuroEntradaRaw>(URL_VE_DOLAR_API_EUR, {
+		const lista = await httpGet<DolarEntradaRaw[]>(URL_VE_DOLAR_API_EUR, {
 			timeoutMs: 8000,
 			reintentos: 1
 		});
-		return numeroPositivoO(eur.promedio, eur.venta);
+		const oficial = buscarPorFuente(lista, 'oficial');
+		if (!oficial) return null;
+		return numeroPositivoO(oficial.promedio, numeroPositivoO(oficial.venta, oficial.compra));
 	} catch {
 		return null;
 	}

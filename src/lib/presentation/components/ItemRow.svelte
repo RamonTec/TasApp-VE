@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Item, Moneda } from '$lib/domain/entities/types';
-	import { formatearNumero, formatearVes, formatearUsd, formatearEur, formatearUsdt } from '$lib/shared/format';
+	import { formatearNumero, formatearVes, formatearUsd, formatearEur, formatearUsdt, parsearMonto } from '$lib/shared/format';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import type { TasasAplicables } from '$lib/domain/usecases/conversion';
 
@@ -49,7 +49,7 @@
 			value={item.precio}
 			aria-label="Precio"
 			oninput={(e) => {
-				const v = parseFloat((e.target as HTMLInputElement).value.replace(',', '.'));
+				const v = parsearMonto((e.target as HTMLInputElement).value);
 				if (Number.isFinite(v) && v >= 0) onActualizar({ precio: v });
 			}}
 			class="tabular w-full rounded-[var(--radius-md)] border-2 border-transparent bg-[var(--color-bg-subtle)] px-3 py-2 text-sm font-bold text-[var(--color-fg-default)] transition-all hover:border-[var(--color-border-default)] focus:border-[var(--color-accent-primary)] focus:bg-[var(--color-bg-elevated)] focus:outline-none focus:ring-4 focus:ring-[var(--color-accent-primary)]/10"
