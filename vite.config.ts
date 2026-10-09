@@ -13,7 +13,9 @@ export default defineConfig({
 				enabled: true
 			},
 			manifest: {
+				id: '/',
 				name: 'TasApp VE — Tasas y Conversor',
+				lang: 'es',
 				short_name: 'TasApp VE',
 				description: 'Tasas BCV y USDT en tiempo real, conversor de monedas y calculadora de items.',
 				theme_color: '#0F766E',

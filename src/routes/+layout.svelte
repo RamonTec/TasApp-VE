@@ -15,6 +15,7 @@
 	} from '$lib/presentation/contexto';
 	import { setContext, untrack } from 'svelte';
 	import Nav from '$lib/presentation/components/Nav.svelte';
+	import InstalarApp from '$lib/presentation/components/InstalarApp.svelte';
 	import type { EstadoTasas, AccionesTasas } from '$lib/presentation/stores/tasas';
 	import type { AccionesItems } from '$lib/presentation/stores/items';
 	import type { Writable } from 'svelte/store';
@@ -99,4 +100,5 @@
 			TasApp VE · Tasas obtenidas del BCV y Binance P2P. No constituye asesoría financiera.
 		</p>
 	</footer>
+	<InstalarApp />
 </div>
