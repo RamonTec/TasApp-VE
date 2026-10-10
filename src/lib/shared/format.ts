@@ -84,7 +84,8 @@ export function tiempoRelativo(iso: string): string {
  * Devuelve NaN si el texto no es un número.
  */
 export function parsearMonto(texto: string): number {
-	let s = texto.trim().replace(/\s|bs\.?|\$|€|usdt?/gi, '');
+	// Un separador al final ("12," mientras se escribe) no aporta nada.
+	let s = texto.trim().replace(/\s|bs\.?|\$|€|usdt?/gi, '').replace(/(\d)[.,]$/, '$1');
 	if (s === '') return Number.NaN;
 	const ultimaComa = s.lastIndexOf(',');
 	const ultimoPunto = s.lastIndexOf('.');
@@ -105,4 +106,29 @@ export function parsearMonto(texto: string): number {
 	}
 	if (!/^-?\d*\.?\d+$/.test(s)) return Number.NaN;
 	return Number.parseFloat(s);
+}
+
+
+/**
+ * Da formato a un monto mientras se escribe: solo dígitos, "." de miles y "," decimal.
+ * Los "." que lleguen se consideran separadores de miles y se descartan.
+ * "1234567,891" → "1.234.567,89" · "abc12" → "12" · ",5" → "0,5" · "007" → "7".
+ */
+export function formatearEntradaMonto(texto: string, maxDecimales = 2, maxEnteros = 12): string {
+	const limpio = texto.replace(/[^\d,]/g, '');
+	const coma = limpio.indexOf(',');
+	const entero = (coma >= 0 ? limpio.slice(0, coma) : limpio)
+		.replace(/^0+(?=\d)/, '')
+		.slice(0, maxEnteros);
+	const agrupado = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+	if (coma < 0 || maxDecimales <= 0) return agrupado;
+	const decimales = limpio.slice(coma + 1).replace(/,/g, '').slice(0, maxDecimales);
+	return `${agrupado || '0'},${decimales}`;
+}
+
+/** Monto numérico como texto de entrada: 1234.5 → "1.234,5". */
+export function montoAEntrada(monto: number, maxDecimales = 2): string {
+	if (!Number.isFinite(monto)) return '';
+	const texto = String(Number(monto.toFixed(maxDecimales))).replace('.', ',');
+	return formatearEntradaMonto(texto, maxDecimales);
 }

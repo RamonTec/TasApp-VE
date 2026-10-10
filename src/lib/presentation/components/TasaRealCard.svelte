@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { TasasDisponibles } from '$lib/domain/usecases/conversion';
+	import { tasasAplicables, type TasasDisponibles } from '$lib/domain/usecases/conversion';
+	import { equivalencias } from '$lib/domain/usecases/calculadoraCompras';
 	import {
 		calcularTasaEfectiva,
 		posicionEntreReferencias,
@@ -7,12 +8,15 @@
 		type ResultadoTasaEfectiva
 	} from '$lib/domain/usecases/tasaEfectiva';
 	import {
+		formatearEur,
 		formatearPorcentaje,
 		formatearTasa,
 		formatearUsd,
+		formatearUsdt,
 		formatearVes,
 		parsearMonto
 	} from '$lib/shared/format';
+	import InputMonto from './InputMonto.svelte';
 	import Share2 from '@lucide/svelte/icons/share-2';
 	import Check from '@lucide/svelte/icons/check';
 	import X from '@lucide/svelte/icons/x';
@@ -23,6 +27,12 @@
 	let textoDivisa = $state('');
 	let textoBs = $state('');
 	let compartido = $state(false);
+
+	const colores = {
+		BCV: 'var(--color-tasa-bcv)',
+		USDT: 'var(--color-tasa-usdt)',
+		PERSONALIZADA: 'var(--color-tasa-personal)'
+	} as const;
 
 	let referencias = $derived.by(() => {
 		const r: ReferenciaTasa[] = [];
@@ -41,17 +51,37 @@
 		calcularTasaEfectiva(parsearMonto(textoDivisa), parsearMonto(textoBs), referencias)
 	);
 
+	let montoBs = $derived(parsearMonto(textoBs));
+	let soloBs = $derived(
+		!resultado && Number.isFinite(montoBs) && montoBs > 0 && !textoDivisa.trim()
+	);
+
+	/** Sin el precio en $, al menos decimos cuánto son esos Bs a cada tasa. */
+	let equivalentes = $derived.by(() => {
+		if (!soloBs) return [];
+		const eq = equivalencias(montoBs, tasasAplicables(tasas));
+		const filas: { etiqueta: string; valor: number | null; fmt: (n: number) => string; color: string }[] = [
+			{ etiqueta: 'Dólar BCV', valor: eq.dolarBcv, fmt: formatearUsd, color: colores.BCV },
+			{ etiqueta: 'USDT Binance', valor: eq.usdt, fmt: formatearUsdt, color: colores.USDT },
+			{ etiqueta: 'Euro BCV', valor: eq.euroBcv, fmt: formatearEur, color: colores.BCV }
+		];
+		if (tasas.personalizada && tasas.personalizada.valor > 0) {
+			filas.push({
+				etiqueta: tasas.personalizada.etiqueta,
+				valor: montoBs / tasas.personalizada.valor,
+				fmt: formatearUsd,
+				color: colores.PERSONALIZADA
+			});
+		}
+		return filas.filter((f) => f.valor !== null);
+	});
+
 	let posicion = $derived(
 		resultado && tasas.bcv && tasas.usdt
 			? posicionEntreReferencias(resultado.tasa, tasas.bcv.usd, tasas.usdt.promedio)
 			: null
 	);
 
-	const colores = {
-		BCV: 'var(--color-tasa-bcv)',
-		USDT: 'var(--color-tasa-usdt)',
-		PERSONALIZADA: 'var(--color-tasa-personal)'
-	} as const;
 
 	const veredictos = {
 		PAGAR_EN_BS: {
@@ -121,7 +151,7 @@
 			¿A qué tasa te están cobrando?
 		</h2>
 		<p class="mt-0.5 text-sm text-[var(--color-fg-muted)]">
-			Escribe el precio en dólares y lo que te piden en bolívares.
+			Escribe lo que te piden en bolívares. Si sabes el precio en dólares, agrégalo para ver la tasa.
 		</p>
 	</div>
 
@@ -131,10 +161,7 @@
 				Precio en $
 			</span>
 			<div class="relative">
-				<input
-					type="text"
-					inputmode="decimal"
-					autocomplete="off"
+				<InputMonto
 					bind:value={textoDivisa}
 					placeholder="10,00"
 					class="tabular w-full rounded-[var(--radius-md)] border-2 border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] py-3 pl-3 pr-8 text-xl font-semibold text-[var(--color-fg-default)] focus:border-[var(--color-accent-primary)] focus:bg-[var(--color-bg-elevated)] focus:outline-none"
@@ -147,10 +174,7 @@
 				Te cobran en Bs
 			</span>
 			<div class="relative">
-				<input
-					type="text"
-					inputmode="decimal"
-					autocomplete="off"
+				<InputMonto
 					bind:value={textoBs}
 					placeholder="10.500"
 					class="tabular w-full rounded-[var(--radius-md)] border-2 border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] py-3 pl-3 pr-9 text-xl font-semibold text-[var(--color-fg-default)] focus:border-[var(--color-accent-primary)] focus:bg-[var(--color-bg-elevated)] focus:outline-none"
@@ -242,9 +266,45 @@
 				</div>
 			{/if}
 		</div>
+	{:else if soloBs}
+		<div class="px-5 pb-5" aria-live="polite">
+			<div class="flex items-center justify-between gap-3">
+				<p class="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-fg-muted)]">
+					{formatearVes(montoBs)} equivalen a
+				</p>
+				<button
+					type="button"
+					onclick={limpiar}
+					class="grid h-8 w-8 place-items-center rounded-[var(--radius-md)] text-[var(--color-fg-muted)] hover:bg-[var(--color-bg-subtle)] hover:text-[var(--color-fg-default)]"
+					aria-label="Limpiar"
+				>
+					<X size={16} />
+				</button>
+			</div>
+			{#if equivalentes.length > 0}
+				<ul class="mt-2 divide-y divide-[var(--color-border-default)] rounded-[var(--radius-md)] border border-[var(--color-border-default)]">
+					{#each equivalentes as e (e.etiqueta)}
+						<li class="flex items-baseline justify-between gap-3 px-3 py-2.5">
+							<p class="flex min-w-0 items-center gap-1.5 truncate text-sm font-semibold text-[var(--color-fg-default)]">
+								<span class="h-1.5 w-1.5 shrink-0 rounded-full" style="background-color: {e.color}" aria-hidden="true"></span>
+								{e.etiqueta}
+							</p>
+							<p class="tabular shrink-0 text-base font-bold text-[var(--color-fg-default)]">
+								{e.fmt(e.valor ?? 0)}
+							</p>
+						</li>
+					{/each}
+				</ul>
+				<p class="mt-3 text-xs text-[var(--color-fg-subtle)]">
+					Agrega el precio en $ para saber a qué tasa te están cobrando.
+				</p>
+			{:else}
+				<p class="mt-2 text-sm text-[var(--color-fg-muted)]">Aún no hay tasas para comparar.</p>
+			{/if}
+		</div>
 	{:else if textoDivisa.trim() || textoBs.trim()}
 		<p class="px-5 pb-5 text-sm text-[var(--color-fg-muted)]">
-			Completa ambos montos para ver la tasa.
+			Escribe también lo que te piden en Bs para ver la tasa.
 		</p>
 	{/if}
 </section>

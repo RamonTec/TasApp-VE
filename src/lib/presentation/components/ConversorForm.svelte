@@ -16,6 +16,7 @@
 	} from '$lib/shared/format';
 	import ArrowRightLeft from '@lucide/svelte/icons/arrow-right-left';
 	import SelectorTasaPills from './SelectorTasaPills.svelte';
+	import InputMonto from './InputMonto.svelte';
 
 	type Props = {
 		monedasDisponibles: readonly Moneda[];
@@ -115,9 +116,7 @@
 					Monto a convertir
 				</span>
 				<div class="relative transition-all duration-300 transform group-focus-within:scale-[1.01]">
-					<input
-						type="text"
-						inputmode="decimal"
+					<InputMonto
 						bind:value={monto}
 						placeholder="0,00"
 						aria-label="Monto a convertir"
