@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { parsearMonto } from '$lib/shared/format';
+	import { montoAEntrada, parsearMonto } from '$lib/shared/format';
+	import InputMonto from './InputMonto.svelte';
 	import { untrack } from 'svelte';
 	import Hand from '@lucide/svelte/icons/hand';
 	import Plus from '@lucide/svelte/icons/plus';
@@ -16,7 +17,7 @@
 
 
 
-	let valorTexto = $state(untrack(() => valor !== null ? String(valor).replace('.', ',') : ''));
+	let valorTexto = $state(untrack(() => (valor !== null ? montoAEntrada(valor, 4) : '')));
 	let etiquetaTexto = $state(untrack(() => etiqueta));
 	let error = $state<string | null>(null);
 
@@ -92,10 +93,9 @@
 					<span class="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-fg-muted)]">
 						Valor (Bs. por USD)
 					</span>
-					<input
-						type="text"
-						inputmode="decimal"
+					<InputMonto
 						bind:value={valorTexto}
+						decimales={4}
 						placeholder="ej. 36,50"
 						class="tabular mt-1 w-full rounded-[var(--radius-sm)] border border-[var(--color-border-default)] bg-[var(--color-bg-elevated)] px-3 py-2 text-sm font-medium text-[var(--color-fg-default)] focus:border-[var(--color-accent-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-accent-primary)]/20"
 					/>

@@ -13,11 +13,12 @@
 		parsearMonto
 	} from '$lib/shared/format';
 	import RecomendacionPago from './RecomendacionPago.svelte';
-	import Delete from '@lucide/svelte/icons/delete';
+	import InputMonto from './InputMonto.svelte';
 	import Plus from '@lucide/svelte/icons/plus';
 	import Minus from '@lucide/svelte/icons/minus';
 	import Trash2 from '@lucide/svelte/icons/trash-2';
 	import Undo2 from '@lucide/svelte/icons/undo-2';
+	import X from '@lucide/svelte/icons/x';
 
 	type Props = {
 		items: readonly Item[];
@@ -47,6 +48,7 @@
 	let cantidad = $state(1);
 	let moneda = $state<Moneda>('USD');
 	let vaciados = $state<Item[] | null>(null);
+	let campo = $state<HTMLInputElement | null>(null);
 	let almacen: AlmacenamientoNavegador | null = null;
 
 	onMount(() => {
@@ -58,6 +60,7 @@
 	function elegirMoneda(m: Moneda): void {
 		moneda = m;
 		almacen?.guardar(KEY_MONEDA, m);
+		campo?.focus();
 	}
 
 	let monto = $derived(parsearMonto(entrada));
@@ -88,34 +91,21 @@
 		}
 	]);
 
-	function tecla(t: string): void {
-		vaciados = null;
-		if (t === ',') {
-			if (entrada.includes(',')) return;
-			entrada = entrada === '' ? '0,' : entrada + ',';
-			return;
-		}
-		const decimales = entrada.split(',')[1];
-		if (decimales !== undefined && decimales.length + t.length > 2) return;
-		if (entrada.replace(',', '').length >= 10) return;
-		entrada = entrada === '' || entrada === '0' ? t.replace(/^0+(?=\d)/, '') : entrada + t;
-	}
-
-	function borrar(): void {
-		entrada = entrada.slice(0, -1);
-	}
-
 	function limpiarEntrada(): void {
 		entrada = '';
 		cantidad = 1;
 	}
 
-	function sumar(): void {
+	function sumar(e?: SubmitEvent): void {
+		e?.preventDefault();
 		if (!puedeSumar) return;
+		vaciados = null;
 		onAgregar(
 			crearItem({ nombre: `Artículo ${items.length + 1}`, precio: monto, cantidad, moneda })
 		);
 		limpiarEntrada();
+		// Mantener el teclado del teléfono abierto para el siguiente precio.
+		campo?.focus();
 	}
 
 	function cambiarCantidad(item: Item, delta: number): void {
@@ -139,30 +129,25 @@
 		return totalCompraEnBs([item], tasas);
 	}
 
-	function alTeclear(e: KeyboardEvent): void {
-		const destino = e.target as HTMLElement | null;
-		if (destino?.closest('input, textarea, select, [contenteditable]')) return;
-		if (e.ctrlKey || e.metaKey || e.altKey) return;
-		if (/^[0-9]$/.test(e.key)) tecla(e.key);
-		else if (e.key === ',' || e.key === '.') tecla(',');
-		else if (e.key === 'Backspace') borrar();
-		else if (e.key === 'Escape') limpiarEntrada();
-		else if (e.key === 'Enter' || e.key === '+') sumar();
-		else return;
-		e.preventDefault();
+	function alTeclearEnCampo(e: KeyboardEvent): void {
+		if (e.key === '+') {
+			e.preventDefault();
+			sumar();
+		} else if (e.key === 'Escape') {
+			limpiarEntrada();
+		}
 	}
 
-	const teclas = ['7', '8', '9', '4', '5', '6', '1', '2', '3', ',', '0', '00'];
-	const claseTecla =
-		'tabular grid h-14 place-items-center rounded-[var(--radius-md)] bg-[var(--color-bg-subtle)] text-xl font-semibold text-[var(--color-fg-default)] transition-colors hover:bg-[var(--color-border-default)] active:scale-[0.97]';
+	/** Evita que el botón le quite el foco al campo y se cierre el teclado. */
+	function conservarFoco(e: PointerEvent): void {
+		if (document.activeElement === campo) e.preventDefault();
+	}
 </script>
 
-<svelte:window onkeydown={alTeclear} />
-
-<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
 	<section class="card overflow-hidden lg:col-start-1 lg:row-start-1" aria-label="Calculadora">
 		<!-- Pantalla -->
-		<div class="border-b border-[var(--color-border-default)] px-5 pb-4 pt-5">
+		<div class="px-5 pb-4 pt-5">
 			<div class="flex items-center justify-between gap-3">
 				<div
 					class="flex gap-1 rounded-[var(--radius-md)] bg-[var(--color-bg-subtle)] p-1"
@@ -175,10 +160,10 @@
 							role="radio"
 							aria-checked={moneda === m.value}
 							onclick={() => elegirMoneda(m.value)}
-							class="min-w-10 rounded-[var(--radius-sm)] px-2.5 py-1 text-sm font-bold transition-colors {moneda ===
+							class="min-w-10 rounded-[var(--radius-sm)] border-2 px-2.5 py-1 text-sm font-bold transition-colors {moneda ===
 							m.value
-								? 'bg-[var(--color-bg-elevated)] text-[var(--color-fg-default)] shadow-[var(--shadow-sm)]'
-								: 'text-[var(--color-fg-muted)] hover:text-[var(--color-fg-default)]'}"
+								? 'border-[var(--color-accent-primary)] bg-[var(--color-bg-elevated)] text-[var(--color-accent-primary)] shadow-[var(--shadow-sm)]'
+								: 'border-transparent text-[var(--color-fg-muted)] hover:text-[var(--color-fg-default)]'}"
 						>
 							{m.label}
 						</button>
@@ -209,17 +194,44 @@
 				</div>
 			</div>
 
-			<p
-				class="tabular mt-4 truncate text-right text-5xl font-bold tracking-tight {entrada
-					? 'text-[var(--color-fg-default)]'
-					: 'text-[var(--color-fg-subtle)]'}"
-				aria-live="polite"
-			>
-				<span class="text-2xl font-semibold text-[var(--color-fg-muted)]"
-					>{monedasEntrada.find((m) => m.value === moneda)?.label}</span
+			<form class="mt-4 flex items-center gap-2" onsubmit={sumar}>
+				<label class="relative min-w-0 flex-1">
+					<span class="sr-only">Precio</span>
+					<span
+						class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-2xl font-semibold text-[var(--color-fg-muted)]"
+						aria-hidden="true">{monedasEntrada.find((m) => m.value === moneda)?.label}</span
+					>
+					<InputMonto
+						bind:value={entrada}
+						bind:elemento={campo}
+						onkeydown={alTeclearEnCampo}
+						enterkeyhint="done"
+						placeholder="0"
+						aria-label="Precio"
+						class="tabular h-16 w-full rounded-[var(--radius-md)] border-2 border-[var(--color-border-default)] bg-[var(--color-bg-subtle)] pl-12 pr-10 text-right text-4xl font-bold tracking-tight text-[var(--color-fg-default)] placeholder:text-[var(--color-fg-subtle)] focus:border-[var(--color-accent-primary)] focus:bg-[var(--color-bg-elevated)] focus:outline-none"
+					/>
+					{#if entrada}
+						<button
+							type="button"
+							onpointerdown={conservarFoco}
+							onclick={limpiarEntrada}
+							class="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-full text-[var(--color-fg-muted)] hover:bg-[var(--color-border-default)] hover:text-[var(--color-fg-default)]"
+							aria-label="Limpiar precio"
+						>
+							<X size={16} />
+						</button>
+					{/if}
+				</label>
+				<button
+					type="submit"
+					onpointerdown={conservarFoco}
+					disabled={!puedeSumar}
+					class="grid h-16 w-16 shrink-0 place-items-center rounded-[var(--radius-md)] bg-[var(--color-accent-primary)] text-[var(--color-fg-inverse)] shadow-[var(--shadow-sm)] transition-all hover:bg-[var(--color-accent-primary-hi)] active:scale-[0.97] disabled:opacity-40"
+					aria-label="Sumar a la cuenta"
 				>
-				{entrada || '0'}
-			</p>
+					<Plus size={28} strokeWidth={3} />
+				</button>
+			</form>
 			<div class="tabular mt-1 flex h-5 items-baseline justify-between gap-3 text-sm text-[var(--color-fg-muted)]">
 				<p class="truncate">
 					{#if items.length > 0 && totalBs !== null}
@@ -234,37 +246,7 @@
 			</div>
 		</div>
 
-		<!-- Teclado -->
-		<div class="grid grid-cols-4 gap-2 p-3">
-			<div class="col-span-3 grid grid-cols-3 gap-2">
-				{#each teclas as t (t)}
-					<button type="button" class={claseTecla} onclick={() => tecla(t)}>{t}</button>
-				{/each}
-			</div>
-			<div class="grid grid-rows-4 gap-2">
-				<button type="button" class={claseTecla} onclick={borrar} aria-label="Borrar último dígito">
-					<Delete size={22} />
-				</button>
-				<button
-					type="button"
-					class="{claseTecla} text-base text-[var(--color-accent-danger)]"
-					onclick={limpiarEntrada}
-					aria-label="Limpiar número"
-				>
-					C
-				</button>
-				<button
-					type="button"
-					onclick={sumar}
-					disabled={!puedeSumar}
-					class="row-span-2 flex flex-col items-center justify-center gap-1 rounded-[var(--radius-md)] bg-[var(--color-accent-primary)] text-sm font-bold text-[var(--color-fg-inverse)] shadow-[var(--shadow-sm)] transition-all hover:bg-[var(--color-accent-primary-hi)] active:scale-[0.97] disabled:opacity-40"
-				>
-					<Plus size={24} strokeWidth={3} />
-					Sumar
-				</button>
-			</div>
-		</div>
-	</section>
+		</section>
 
 	<div class="space-y-6 lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1">
 		<!-- Total -->
@@ -397,8 +379,8 @@
 			</ul>
 		{:else}
 			<p class="px-5 py-8 text-center text-sm text-[var(--color-fg-muted)]">
-				Marca el precio de cada cosa y toca <span
-					class="font-semibold text-[var(--color-fg-default)]">Sumar</span
+				Escribe el precio de cada cosa y toca <span
+					class="font-semibold text-[var(--color-fg-default)]">+</span
 				>.
 			</p>
 		{/if}

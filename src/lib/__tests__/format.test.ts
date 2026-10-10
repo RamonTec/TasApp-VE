@@ -6,7 +6,10 @@ import {
 	formatearUsdt,
 	formatearPorcentaje,
 	formatearNumero,
-	formatearTasa
+	formatearTasa,
+	formatearEntradaMonto,
+	montoAEntrada,
+	parsearMonto
 } from '../shared/format';
 
 describe('formateo monetario', () => {
@@ -60,5 +63,44 @@ describe('formateo monetario', () => {
 	it('formatearTasa 4 decimales', () => {
 		const out = formatearTasa(36.51234);
 		expect(out).toContain('36,5123');
+	});
+});
+
+describe('formatearEntradaMonto', () => {
+	it.each([
+		['', ''],
+		['1234567', '1.234.567'],
+		['1234567,891', '1.234.567,89'],
+		['1.234', '1.234'],
+		['abc12x', '12'],
+		['-5', '5'],
+		[',5', '0,5'],
+		['12,', '12,'],
+		['12,3,4', '12,34'],
+		['007', '7'],
+		['0,05', '0,05']
+	])('"%s" → "%s"', (texto, esperado) => {
+		expect(formatearEntradaMonto(texto)).toBe(esperado);
+	});
+
+	it('respeta el máximo de decimales', () => {
+		expect(formatearEntradaMonto('36,51234', 4)).toBe('36,5123');
+		expect(formatearEntradaMonto('36,5', 0)).toBe('36');
+	});
+
+	it('lo que formatea se puede volver a leer', () => {
+		for (const t of ['1.234.567,89', '12,', '0,5', '1.000']) {
+			expect(parsearMonto(formatearEntradaMonto(t))).toBe(
+				Number(t.replace(/\./g, '').replace(',', '.').replace(/\.$/, ''))
+			);
+		}
+	});
+});
+
+describe('montoAEntrada', () => {
+	it('convierte un número al texto de entrada', () => {
+		expect(montoAEntrada(1234.5)).toBe('1.234,5');
+		expect(montoAEntrada(36.51234, 4)).toBe('36,5123');
+		expect(montoAEntrada(NaN)).toBe('');
 	});
 });
