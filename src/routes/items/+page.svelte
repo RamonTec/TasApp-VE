@@ -2,6 +2,7 @@
 	import { getEstadoTasas, getAcciones } from '$lib/presentation/contexto';
 	import Encabezado from '$lib/presentation/components/Encabezado.svelte';
 	import CalculadoraCompras from '$lib/presentation/components/CalculadoraCompras.svelte';
+	import FormaDePagoCard from '$lib/presentation/components/FormaDePagoCard.svelte';
 	import { tasasAplicables } from '$lib/domain/usecases/conversion';
 
 	const tasas = getEstadoTasas();
@@ -27,3 +28,8 @@
 	onEliminar={(id) => acciones.items.eliminar(id)}
 	onLimpiarTodo={() => acciones.items.limpiar()}
 />
+
+<!-- Alineada con la columna izquierda de la calculadora en pantallas anchas. -->
+<div class="mt-6 lg:w-[calc(50%-0.75rem)]">
+	<FormaDePagoCard tasas={{ bcv: $tasas.bcv, usdt: $tasas.usdt, personalizada: $tasas.personalizada }} />
+</div>
