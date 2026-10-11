@@ -5,6 +5,7 @@
 	import DiferenciaCard from '$lib/presentation/components/DiferenciaCard.svelte';
 	import ResumenTasas from '$lib/presentation/components/ResumenTasas.svelte';
 	import TasaRealCard from '$lib/presentation/components/TasaRealCard.svelte';
+	import FormaDePagoCard from '$lib/presentation/components/FormaDePagoCard.svelte';
 	import ManualTasaForm from '$lib/presentation/components/ManualTasaForm.svelte';
 	import { calcularDiferenciaEntreFuentes } from '$lib/domain/usecases/conversion';
 	import { tiempoRelativo } from '$lib/shared/format';
@@ -94,8 +95,9 @@
 	cargando={$tasas.cargando}
 />
 
-<div class="mt-4">
+<div class="mt-4 grid gap-4 lg:grid-cols-2 lg:items-start">
 	<TasaRealCard tasas={tasasDisponibles} />
+	<FormaDePagoCard tasas={tasasDisponibles} />
 </div>
 
 <h2 class="mt-10 mb-4 text-sm font-semibold uppercase tracking-wider text-[var(--color-fg-muted)]">
